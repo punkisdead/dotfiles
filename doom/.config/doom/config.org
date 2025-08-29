@@ -151,23 +151,142 @@ Enable company mode for everything except...
 (setq doom-themes-treemacs-theme "doom-colors")
 #+end_src
 
-* Elixir settings
+* Elixir LSP/eglot settings
 
 #+begin_src emacs-lisp
-;;(require 'eglot)
+;; Configure eglot for Elixir
+(after! eglot
+  ;; Add ElixirLS to eglot server programs
+  (add-to-list 'eglot-server-programs
+               '((elixir-mode elixir-ts-mode heex-mode) .
+                 ("~/.elixir-ls/release/language_server.sh"))))
 
-;; This is optional. It automatically runs `M-x eglot` for you whenever you are in `elixir-mode`:
-;;(add-hook 'elixir-mode-hook 'eglot-ensure)
+;; Optional: Configure eglot behavior
+(after! eglot
+  ;; Disable specific features if needed
+  (setq eglot-autoshutdown t)  ; Shutdown server when last buffer is closed
+  (setq eglot-confirm-server-initiated-edits nil)  ; Don't ask for confirmation
+  (setq eglot-sync-connect-timeout 10)  ; Increase connection timeout
+  (setq eglot-connect-timeout 10)
+  (setq eglot-extend-to-xref t)  ; Use eglot for xref
 
-;; Be sure to edit the path appropriately; use the `.bat` script instead for Windows:
-;;(add-to-list 'eglot-server-programs '(elixir-mode "~/.config/emacs/site-lisp/elixir-ls-v0.28.0/language_server.sh"))
+  ;; Customize which events trigger synchronization
+  (setq eglot-send-changes-idle-time 0.5))
 
-(after! lsp-mode
-  (setq lsp-elixir-server-command '("~/.config/emacs/site-lisp/elixir-ls-v0.28.0/language_server.sh")))
+;; Set up keybindings for eglot (Doom already provides many)
+(map! :after eglot
+      :map eglot-mode-map
+      :leader
+      :prefix ("c l" . "lsp")
+      :desc "Start LSP"           "s" #'eglot
+      :desc "Restart LSP"         "r" #'eglot-reconnect
+      :desc "Shutdown LSP"        "q" #'eglot-shutdown
+      :desc "Rename symbol"       "R" #'eglot-rename
+      :desc "Format buffer"       "f" #'eglot-format-buffer
+      :desc "Format region"       "F" #'eglot-format
+      :desc "Show diagnostics"    "d" #'flymake-show-diagnostics-buffer
+      :desc "Code actions"        "a" #'eglot-code-actions
+      :desc "Organize imports"    "o" #'eglot-code-action-organize-imports)
 
-;; Increase the file watch threshold to prevent warnings in large projects
-(after! lsp-mode
-  (setq lsp-file-watch-threshold 5000)) ;; Adjust this number based on your needs
+;; Optional: Auto-start eglot for Elixir files
+(add-hook 'elixir-mode-hook 'eglot-ensure)
+(add-hook 'elixir-ts-mode-hook 'eglot-ensure)
+(add-hook 'heex-mode-hook 'eglot-ensure)
+
+;; Optional: Configure ElixirLS-specific settings
+(after! eglot
+  (defun my/eglot-elixir-ls-settings ()
+    "Configure ElixirLS-specific settings."
+    `(:elixirLS (:dialyzerEnabled :json-false
+                 :fetchDeps t
+                 :suggestSpecs t
+                 :signatureAfterComplete t
+                 :enableTestLenses t)))
+
+  ;; Apply settings when connecting to ElixirLS
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              (when (derived-mode-p 'elixir-mode 'elixir-ts-mode 'heex-mode)
+                (setq-local eglot-workspace-configuration
+                            (my/eglot-elixir-ls-settings))))))
+#+end_src
+
+Make sure ElixirLS can find your Elixir/Erlang installation
+
+#+begin_src emacs-lisp
+;; If you use asdf or similar version managers
+(after! eglot
+  ;; Make sure PATH is set correctly for eglot
+  (when (memq window-system '(mac ns x))
+    (setenv "PATH" (concat (getenv "PATH") ":~/.elixir-ls/release"))
+    (setq exec-path (append exec-path '("~/.elixir-ls/release")))))
+
+;; Or if you need to set specific environment variables
+(setenv "ERL_AFLAGS" "-kernel shell_history enabled")
+#+end_src
+
+Add these for optimization
+
+#+begin_src emacs-lisp
+;; Ignore common directories to improve performance
+(after! eglot
+  ;; Tell eglot to ignore certain directories
+  (add-to-list 'project-vc-ignores "node_modules")
+  (add-to-list 'project-vc-ignores "_build")
+  (add-to-list 'project-vc-ignores "deps")
+  (add-to-list 'project-vc-ignores ".elixir_ls"))
+
+;; Optimize flymake for use with eglot
+(after! flymake
+  (setq flymake-no-changes-timeout 0.5)
+  (setq flymake-start-syntax-check-on-newline t)
+  (setq flymake-start-syntax-check-on-find-file t))
+
+;; Optional: Use company for better completion experience
+(after! company
+  (setq company-idle-delay 0.2)
+  (setq company-minimum-prefix-length 1))
+#+end_src
+
+Helpers for debugging
+
+#+begin_src emacs-lisp
+;; Debug helpers for eglot
+(defun my/eglot-show-workspace-configuration ()
+  "Show current eglot workspace configuration."
+  (interactive)
+  (when (eglot-current-server)
+    (message "%s" (json-encode (eglot--workspace-configuration-plist
+                                (eglot-current-server))))))
+
+;; Toggle eglot event logging for debugging
+(defun my/toggle-eglot-events-buffer ()
+  "Toggle the eglot events buffer for debugging."
+  (interactive)
+  (setq eglot-events-buffer-size (if (eq eglot-events-buffer-size 0)
+                                     2000000
+                                   0))
+  (message "Eglot events buffer %s"
+           (if (eq eglot-events-buffer-size 0) "disabled" "enabled")))
+
+(map! :leader
+      :prefix ("c l" . "lsp")
+      :desc "Show workspace config" "w" #'my/eglot-show-workspace-configuration
+      :desc "Toggle eglot events" "E" #'my/toggle-eglot-events-buffer)
+#+end_src
+
+Troubleshooting
+
+#+begin_src emacs-lisp
+(after! eglot
+  ;; Increase timeout settings
+  (setq eglot-connect-timeout 30)  ; Increase from 10 to 30 seconds
+  (setq eglot-sync-connect 1)      ; Wait 1 second for synchronous connection
+  (setq eglot-autoshutdown t)      ; Shutdown unused servers
+
+  ;; Alternative: Set to nil for infinite timeout (not recommended)
+  ;; (setq eglot-connect-timeout nil)
+  )
 #+end_src
 
 * Copilot settings
