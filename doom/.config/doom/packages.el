@@ -1,6 +1,4 @@
 ;; -*- no-byte-compile: t; -*-
-
-;;; -*- lexical-binding: t; -*-
 ;;; $DOOMDIR/packages.el
 
 ;; To install a package with Doom you must declare them here and run 'doom sync'
@@ -49,13 +47,14 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
-
-(package! copilot
-  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
+;;(package! copilot
+;;  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
 
 (package! exec-path-from-shell)
-(package! copilot-chat
-  :recipe (:host github :repo "chep/copilot-chat.el"))
+;;(package! copilot-chat
+;;  :recipe (:host github :repo "chep/copilot-chat.el"))
+
+(package! catppuccin-theme)
 ;; (package! git-gutter)
 ;; (package! git-gutter-fringe)
 ;; (package! fringe-helper)  ;; dependency for git-gutter-fringe

@@ -14,10 +14,14 @@
 ;;  (setq js-indent-level 2)
 ;;  (setq indent-tabs-mode nil))
 
-(setq doom-font (font-spec :family "JetBrains Mono" :size 15)
-      doom-big-font (font-spec :family "MesloLGS NF" :size 24))
+(setq doom-font (font-spec :family "CaskaydiaMono Nerd Font" :size 15)
+      doom-big-font (font-spec :family "CaskaydiaMono Nerd Font" :size 24))
 
-(setq doom-theme 'doom-one)
+;; Set Catppuccin flavor (options: 'latte, 'frappe, 'macchiato, 'mocha)
+(setq catppuccin-flavor 'mocha) ;; Dark theme with high contrast
+
+;; Set the theme to catppuccin
+(setq doom-theme 'catppuccin)
 
 (custom-set-faces
   '(ansi-color-blue ((t (:foreground "RoyalBlue1" :weight bold))))
@@ -198,34 +202,34 @@
   )
 
 ;; accept completion from copilot and fallback to company
-(use-package! copilot
-  :hook (prog-mode . copilot-mode)
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
-
-(after! copilot
-  ;; Clear the warning list to suppress warnings
-  (setq copilot-indent-warned-modes '())
-  
-  ;; Default fallback
-  (setq-default copilot-indent-offset 2))
-
-(after! copilot
-  ;; Override the indentation detection function
-  (defun copilot--infer-indentation-offset ()
-    "Return the indentation offset for the current buffer."
-    (or copilot-indent-offset
-        (and (boundp 'tab-width) tab-width)
-        2)))
-
-(use-package! copilot-chat
-  :defer t
-  :config
-  (setq copilot-chat-auth-hook #'copilot-chat-auth-from-environment)
-  ;; Optionally set up keybindings
-  (map! :leader
-        (:prefix ("x" . "AI")
-         :desc "Copilot Chat" "c" #'copilot-chat-run)))
+;; (use-package! copilot
+;;   :hook (prog-mode . copilot-mode)
+;;   :bind (:map copilot-completion-map
+;;               ("<tab>" . 'copilot-accept-completion)
+;;               ("TAB" . 'copilot-accept-completion)
+;;               ("C-TAB" . 'copilot-accept-completion-by-word)
+;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
+;; 
+;; (after! copilot
+;;   ;; Clear the warning list to suppress warnings
+;;   (setq copilot-indent-warned-modes '())
+;; 
+;;   ;; Default fallback
+;;   (setq-default copilot-indent-offset 2))
+;; 
+;; (after! copilot
+;;   ;; Override the indentation detection function
+;;   (defun copilot--infer-indentation-offset ()
+;;     "Return the indentation offset for the current buffer."
+;;     (or copilot-indent-offset
+;;         (and (boundp 'tab-width) tab-width)
+;;         2)))
+;; 
+;; (use-package! copilot-chat
+;;   :defer t
+;;   :config
+;;   (setq copilot-chat-auth-hook #'copilot-chat-auth-from-environment)
+;;   ;; Optionally set up keybindings
+;;   (map! :leader
+;;         (:prefix ("x" . "AI")
+;;          :desc "Copilot Chat" "c" #'copilot-chat-run)))
