@@ -47,14 +47,26 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
-;;(package! copilot
-;;  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
+(package! copilot
+  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
 
 (package! exec-path-from-shell)
-;;(package! copilot-chat
-;;  :recipe (:host github :repo "chep/copilot-chat.el"))
+(package! copilot-chat
+  :recipe (:host github :repo "chep/copilot-chat.el"))
 
 (package! catppuccin-theme)
+
+;; Ruby/Rails development packages
+(package! projectile-rails)
+(package! inf-ruby)
+(package! ruby-electric)
+(package! rspec-mode)
+(package! rubocop)
+(package! bundler)
+(package! rvm)
+(package! rbenv)
+(package! emmet-mode)
+
 ;; (package! git-gutter)
 ;; (package! git-gutter-fringe)
 ;; (package! fringe-helper)  ;; dependency for git-gutter-fringe

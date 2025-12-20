@@ -1,11 +1,21 @@
 # Ghostty Configuration
 
-# Font
-font-family = Cascadia Mono
+# Font - matching Doom Emacs settings
+font-family = CaskaydiaMono Nerd Font
+font-size = 12
+# Font styles
+font-style = normal
+font-style-bold = bold
+font-style-italic = italic
+font-style-bold-italic = bold italic
 
 # Padding
 window-padding-x = 10
 window-padding-y = 10
+
+# Text rendering improvements
+# font-thicken = true  # Uncomment if text still appears too light
+adjust-cell-height = 5%
 
 # Opacity
 background-opacity = 0.95

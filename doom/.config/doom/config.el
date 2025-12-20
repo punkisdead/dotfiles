@@ -1,7 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 
 (setq user-full-name "Jeremy Anderson"
-      user-mail-address "janderson@denim.com")
+      user-mail-address "jeremy.d.anderson@gmail.com")
 
 
 
@@ -201,35 +201,270 @@
   ;; (setq eglot-connect-timeout nil)
   )
 
-;; accept completion from copilot and fallback to company
-;; (use-package! copilot
-;;   :hook (prog-mode . copilot-mode)
-;;   :bind (:map copilot-completion-map
-;;               ("<tab>" . 'copilot-accept-completion)
-;;               ("TAB" . 'copilot-accept-completion)
-;;               ("C-TAB" . 'copilot-accept-completion-by-word)
-;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
-;; 
-;; (after! copilot
-;;   ;; Clear the warning list to suppress warnings
-;;   (setq copilot-indent-warned-modes '())
-;; 
-;;   ;; Default fallback
-;;   (setq-default copilot-indent-offset 2))
-;; 
-;; (after! copilot
-;;   ;; Override the indentation detection function
-;;   (defun copilot--infer-indentation-offset ()
-;;     "Return the indentation offset for the current buffer."
-;;     (or copilot-indent-offset
-;;         (and (boundp 'tab-width) tab-width)
-;;         2)))
-;; 
-;; (use-package! copilot-chat
-;;   :defer t
+;; Configure eglot for Ruby with Solargraph
+(after! eglot
+  ;; Add Solargraph to eglot server programs
+  (add-to-list 'eglot-server-programs
+               '((ruby-mode ruby-ts-mode) . ("solargraph" "stdio")))
+
+  ;; Alternative: Use ruby-lsp if preferred
+  ;; (add-to-list 'eglot-server-programs
+  ;;              '((ruby-mode ruby-ts-mode) . ("ruby-lsp")))
+  )
+
+;; Auto-start eglot for Ruby files
+(add-hook 'ruby-mode-hook 'eglot-ensure)
+(add-hook 'ruby-ts-mode-hook 'eglot-ensure)
+
+;; Configure Solargraph-specific settings
+(after! eglot
+  (defun my/eglot-solargraph-settings ()
+    "Configure Solargraph-specific settings."
+    `(:solargraph (:diagnostics t
+                   :autoformat t
+                   :completion t
+                   :hover t
+                   :symbols t
+                   :definitions t
+                   :rename t
+                   :references t
+                   :folding t
+                   :logLevel "warn")))
+
+  ;; Apply settings when connecting to Solargraph
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              (when (derived-mode-p 'ruby-mode 'ruby-ts-mode)
+                (setq-local eglot-workspace-configuration
+                            (my/eglot-solargraph-settings))))))
+
+;; Keybindings for Ruby LSP functions
+(map! :after eglot
+      :map ruby-mode-map
+      :localleader
+      (:prefix ("l" . "lsp")
+       :desc "Start LSP" "s" #'eglot
+       :desc "Restart LSP" "r" #'eglot-reconnect
+       :desc "Format buffer" "f" #'eglot-format-buffer
+       :desc "Format region" "F" #'eglot-format
+       :desc "Rename symbol" "R" #'eglot-rename
+       :desc "Code actions" "a" #'eglot-code-actions
+       :desc "Go to definition" "d" #'xref-find-definitions
+       :desc "Find references" "r" #'xref-find-references))
+
+;; Since Doom already has tree-sitter module enabled, we just need to configure it
+(after! tree-sitter
+  ;; Enable tree-sitter for Ruby mode
+  (add-hook 'ruby-mode-hook #'tree-sitter-mode)
+  (add-hook 'ruby-mode-hook #'tree-sitter-hl-mode))
+
+;; Use ruby-ts-mode when available (Emacs 29+)
+(when (and (fboundp 'treesit-available-p) (treesit-available-p))
+  ;; Remap ruby-mode to ruby-ts-mode
+  (add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode)))
+
+;; Enhanced Rails support with projectile-rails
+(use-package! projectile-rails
+  :after (projectile ruby-mode)
+  :config
+  (projectile-rails-global-mode)
+
+  ;; Define keybindings for Rails commands
+  (map! :map projectile-rails-mode-map
+        :localleader
+        (:prefix ("r" . "rails")
+         :desc "Console" "c" #'projectile-rails-console
+         :desc "Server" "s" #'projectile-rails-server
+         :desc "Generate" "g" #'projectile-rails-generate
+         :desc "Destroy" "d" #'projectile-rails-destroy
+         :desc "Database console" "D" #'projectile-rails-dbconsole
+         :desc "Extract partial" "x" #'projectile-rails-extract-region
+
+         (:prefix ("g" . "goto")
+          :desc "Model" "m" #'projectile-rails-find-model
+          :desc "Controller" "c" #'projectile-rails-find-controller
+          :desc "View" "v" #'projectile-rails-find-view
+          :desc "Helper" "h" #'projectile-rails-find-helper
+          :desc "Test" "t" #'projectile-rails-find-test
+          :desc "Spec" "s" #'projectile-rails-find-spec
+          :desc "Migration" "M" #'projectile-rails-find-migration
+          :desc "Schema" "S" #'projectile-rails-goto-schema
+          :desc "Routes" "R" #'projectile-rails-goto-routes
+          :desc "Gemfile" "G" #'projectile-rails-goto-gemfile))))
+
+;; Auto-enable projectile-rails in Rails projects
+(add-hook 'projectile-mode-hook 'projectile-rails-on)
+
+;; Ruby code style and formatting
+(after! ruby-mode
+  ;; Set Ruby indentation
+  (setq ruby-indent-level 2)
+  (setq ruby-indent-tabs-mode nil)
+
+  ;; Enable electric mode for automatic insertion of end
+  (add-hook 'ruby-mode-hook 'ruby-electric-mode)
+
+  ;; Use rubocop for linting if available
+  (add-hook 'ruby-mode-hook 'rubocop-mode))
+
+;; Configure inf-ruby for REPL
+(use-package! inf-ruby
+  :after ruby-mode
+  :config
+  (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode)
+  (add-hook 'compilation-filter-hook 'inf-ruby-auto-enter)
+
+  ;; Keybindings for REPL
+  (map! :map ruby-mode-map
+        :localleader
+        (:prefix ("s" . "repl")
+         :desc "Start REPL" "s" #'inf-ruby
+         :desc "Send region" "r" #'ruby-send-region
+         :desc "Send definition" "d" #'ruby-send-definition
+         :desc "Send block" "b" #'ruby-send-block
+         :desc "Send buffer" "B" #'ruby-send-buffer
+         :desc "Switch to REPL" "z" #'ruby-switch-to-inf)))
+
+;; RSpec mode for testing
+(use-package! rspec-mode
+  :after ruby-mode
+  :config
+  (add-hook 'ruby-mode-hook 'rspec-mode)
+
+  ;; Keybindings for RSpec
+  (map! :map rspec-mode-map
+        :localleader
+        (:prefix ("t" . "test")
+         :desc "Run all specs" "a" #'rspec-verify-all
+         :desc "Run spec file" "f" #'rspec-verify
+         :desc "Run spec at point" "t" #'rspec-verify-single
+         :desc "Rerun last spec" "r" #'rspec-rerun
+         :desc "Toggle spec/implementation" "T" #'rspec-toggle-spec-and-target)))
+
+;; Bundler integration
+(use-package! bundler
+  :after ruby-mode
+  :config
+  (map! :map ruby-mode-map
+        :localleader
+        (:prefix ("b" . "bundler")
+         :desc "Bundle install" "i" #'bundle-install
+         :desc "Bundle update" "u" #'bundle-update
+         :desc "Bundle exec" "e" #'bundle-exec
+         :desc "Bundle console" "c" #'bundle-console
+         :desc "Bundle open" "o" #'bundle-open)))
+
+;; Web-mode for ERB templates
+(use-package! web-mode
+  :mode "\\.erb\\'"
+  :config
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-css-colorization t)
+  (setq web-mode-enable-current-element-highlight t)
+
+  ;; Enable eglot for ERB files with HTML language server
+  (add-hook 'web-mode-hook
+            (lambda ()
+              (when (string-equal "erb" (file-name-extension buffer-file-name))
+                (eglot-ensure)))))
+
+;; Emmet for HTML/ERB expansion
+(use-package! emmet-mode
+  :hook (web-mode ruby-mode)
+  :config
+  (setq emmet-expand-jsx-className? t)
+  (map! :map emmet-mode-keymap
+        :i "TAB" #'emmet-expand-line))
+
+;; SQL mode enhancements for database.yml and migrations
+(use-package! sql
+  :config
+  ;; Set default SQL product for Rails (PostgreSQL is common)
+  (setq sql-product 'postgres)
+
+  ;; Keybindings for SQL
+  (map! :map sql-mode-map
+        :localleader
+        :desc "Connect to database" "c" #'sql-connect
+        :desc "Send paragraph" "p" #'sql-send-paragraph
+        :desc "Send region" "r" #'sql-send-region
+        :desc "Send buffer" "b" #'sql-send-buffer))
+
+;; YAML mode for database.yml and other config files
+(use-package! yaml-mode
+  :mode "\\.ya?ml\\'"
+  :config
+  (add-hook 'yaml-mode-hook
+            (lambda ()
+              (define-key yaml-mode-map "\C-m" 'newline-and-indent))))
+
+;; Optimize for Rails projects
+(after! projectile
+  ;; Add Rails-specific project detection
+  (add-to-list 'projectile-project-root-files "Gemfile")
+  (add-to-list 'projectile-project-root-files "config.ru")
+
+  ;; Ignore common Rails directories for better performance
+  (add-to-list 'projectile-globally-ignored-directories "tmp")
+  (add-to-list 'projectile-globally-ignored-directories "log")
+  (add-to-list 'projectile-globally-ignored-directories "vendor")
+  (add-to-list 'projectile-globally-ignored-directories "public/assets")
+  (add-to-list 'projectile-globally-ignored-directories "public/packs")
+  (add-to-list 'projectile-globally-ignored-directories "node_modules"))
+
+;; Speed up file navigation in Rails projects
+(after! counsel
+  (add-to-list 'counsel-projectile-grep-ignored-directories "tmp")
+  (add-to-list 'counsel-projectile-grep-ignored-directories "log")
+  (add-to-list 'counsel-projectile-grep-ignored-directories "vendor"))
+
+;; Ruby debugging with DAP mode (optional, requires debugger gem)
+;; (use-package! dap-mode
+;;   :after ruby-mode
 ;;   :config
-;;   (setq copilot-chat-auth-hook #'copilot-chat-auth-from-environment)
-;;   ;; Optionally set up keybindings
-;;   (map! :leader
-;;         (:prefix ("x" . "AI")
-;;          :desc "Copilot Chat" "c" #'copilot-chat-run)))
+;;   (require 'dap-ruby)
+;;   (dap-ruby-setup))
+
+;; Use pry for debugging (more common in Rails)
+(use-package! inf-ruby
+  :config
+  ;; Prefer pry over irb when available
+  (setq inf-ruby-default-implementation "pry")
+  (setq inf-ruby-first-prompt-pattern "^\\[[0-9]+\\] pry\\((.*)\\)[>*\"'] *")
+  (setq inf-ruby-prompt-pattern "^\\[[0-9]+\\] pry\\((.*)\\)[>*\"'] *"))
+
+;; accept completion from copilot and fallback to company
+(use-package! copilot
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+(after! copilot
+  ;; Clear the warning list to suppress warnings
+  (setq copilot-indent-warned-modes '())
+
+  ;; Default fallback
+  (setq-default copilot-indent-offset 2))
+
+(after! copilot
+  ;; Override the indentation detection function
+  (defun copilot--infer-indentation-offset ()
+    "Return the indentation offset for the current buffer."
+    (or copilot-indent-offset
+        (and (boundp 'tab-width) tab-width)
+        2)))
+
+(use-package! copilot-chat
+  :defer t
+  :config
+  (setq copilot-chat-auth-hook #'copilot-chat-auth-from-environment)
+  ;; Optionally set up keybindings
+  (map! :leader
+        (:prefix ("x" . "AI")
+         :desc "Copilot Chat" "c" #'copilot-chat-run)))

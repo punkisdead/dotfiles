@@ -77,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(asdf direnv docker docker-compose git)
+plugins=(direnv docker docker-compose git mise)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -144,4 +144,4 @@ fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
 autoload -Uz compinit && compinit
 
 export KERL_CONFIGURE_OPTIONS="--enable-wx --with-wx-config=/usr/bin/wx-config"
-# eval "$(~/.local/bin/mise activate zsh)"
+eval "$(~/.local/bin/mise activate zsh)"
