@@ -1,50 +1,85 @@
-# $HOME/.config/alacritty/alacritty.toml
-# by Rito Ghosh 2023-10-06
+# Alacritty Configuration - Theme: Nord Dark
+# Colors can be overridden by deadcode theme system
 
-# Alacritty now uses TOML formatting for its config files.
-# This is a simple example.
-
-# There are the specification here: https://github.com/alacritty/alacritty/blob/master/extra/man/alacritty.5.scd
-# It is not obvious how it translates to TOML. But it is extremely straightforward.
-
-# example: WINDOW, COLORS, etc. are tables, and should be represented as [window], [colors], respectively.
-# specifics of variables go under them. e.g.- look under "dynamic_padding" under-
-# https://github.com/alacritty/alacritty/blob/master/extra/man/alacritty.5.scd#window
-# write `dynamic_padding = true` (without backticks -`) under the table [window]
-# for variables with multiple values, use "dotted keys". Like setting `padding.x = 5` under [window].
-# This is simple. If not clear, do several trials and errors.
-
-# Below is my initial set-up. The TOML homepage (https://toml.io/en/v1.0.0) was very helpful in figuring this out. 
-# I put the file alacritty.toml in $HOME/.config/alacritty. However it can be kept anywhere among the places mentioned in
-# https://github.com/alacritty/alacritty/tree/master#configuration
 [general]
-
 live_config_reload = true
 
 [window]
-
-opacity = 0.9
-
-padding.x = 20
-padding.y = 20
-
+opacity = 0.95
+padding.x = 12
+padding.y = 12
 decorations = "Full"
-decorations_theme_variant = "Light" # "Dark"
+decorations_theme_variant = "Dark"
 
 [font]
+normal.family = "JetBrainsMono Nerd Font"
+bold.family = "JetBrainsMono Nerd Font"
+italic.family = "JetBrainsMono Nerd Font"
+bold_italic.family = "JetBrainsMono Nerd Font"
+size = 12.0
 
-normal.family = "Cascadia Code PL"
-bold.family = "Cascadia Code PL"
-italic.family = "Cascadia Code PL"
-bold_italic.family = "Cascadia Code PL"
+[cursor]
+style.shape = "Block"
+style.blinking = "On"
 
-size = 15.0
+# Nord Color Scheme
+[colors.primary]
+background = "#2E3440"
+foreground = "#D8DEE9"
+dim_foreground = "#A5AAAF"
+bright_foreground = "#ECEFF4"
 
-# Tip: for inspiration, look for values in the source code files of your favorite VS Code themes, and use the color picker in
-# Google to test colors before setting a value, or simply using an editor such as VS Code where colors are displayed in a 
-# small box when a HEX is detected by the editor.
+[colors.cursor]
+text = "#2E3440"
+cursor = "#D8DEE9"
+
+[colors.vi_mode_cursor]
+text = "#2E3440"
+cursor = "#D8DEE9"
+
+[colors.selection]
+text = "CellForeground"
+background = "#4C566A"
+
+[colors.search.matches]
+foreground = "#2E3440"
+background = "#88C0D0"
+
+[colors.search.focused_match]
+foreground = "#2E3440"
+background = "#5E81AC"
+
+[colors.normal]
+black = "#3B4252"
+red = "#BF616A"
+green = "#A3BE8C"
+yellow = "#EBCB8B"
+blue = "#81A1C1"
+magenta = "#B48EAD"
+cyan = "#88C0D0"
+white = "#E5E9F0"
+
+[colors.bright]
+black = "#4C566A"
+red = "#BF616A"
+green = "#A3BE8C"
+yellow = "#EBCB8B"
+blue = "#81A1C1"
+magenta = "#B48EAD"
+cyan = "#8FBCBB"
+white = "#ECEFF4"
+
+[colors.dim]
+black = "#373E4D"
+red = "#94545D"
+green = "#809575"
+yellow = "#B29E75"
+blue = "#68809A"
+magenta = "#8C738C"
+cyan = "#6D96A5"
+white = "#AEB3BB"
 
 [[keyboard.bindings]]
 key = "Return"
 mods = "Shift"
-chars = "\x1b\r"
+chars = "\u001b\r"

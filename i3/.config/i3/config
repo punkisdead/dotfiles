@@ -1,3 +1,4 @@
+include $HOME/.config/i3/colors.conf
 include $HOME/.config/i3/workspaces.conf
 include $HOME/.config/i3/rules.conf
 
