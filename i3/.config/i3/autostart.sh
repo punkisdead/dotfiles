@@ -16,3 +16,7 @@ dunst &
 
 # sxhkd
 sxhkd -c ~/.config/i3/sxhkdrc &
+
+# screen locking after 15 minutes of inactivity
+xset s 900 &
+xss-lock --transfer-sleep-lock -- i3lock --nofork &

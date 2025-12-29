@@ -110,6 +110,9 @@ super + m
 
 #i3 Specific Keybindings
 
+super + alt + l
+    loginctl lock-session
+
 super + alt + f
     i3-msg fullscreen toggle
 
