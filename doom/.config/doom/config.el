@@ -252,16 +252,28 @@
        :desc "Go to definition" "d" #'xref-find-definitions
        :desc "Find references" "r" #'xref-find-references))
 
-;; Since Doom already has tree-sitter module enabled, we just need to configure it
+;; Configure treesit for Ruby (Emacs 29+ built-in tree-sitter)
+(when (and (fboundp 'treesit-available-p) (treesit-available-p))
+  ;; Auto-install grammars if missing
+  (setq treesit-language-source-alist
+        '((ruby "https://github.com/tree-sitter/tree-sitter-ruby" "master" "src")))
+
+  ;; Install grammar if not present
+  (unless (treesit-language-available-p 'ruby)
+    (treesit-install-language-grammar 'ruby))
+
+  ;; Remap ruby-mode to ruby-ts-mode
+  (add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode)))
+
+;; For the older tree-sitter package (fallback)
 (after! tree-sitter
   ;; Enable tree-sitter for Ruby mode
   (add-hook 'ruby-mode-hook #'tree-sitter-mode)
-  (add-hook 'ruby-mode-hook #'tree-sitter-hl-mode))
+  (add-hook 'ruby-mode-hook #'tree-sitter-hl-mode)
 
-;; Use ruby-ts-mode when available (Emacs 29+)
-(when (and (fboundp 'treesit-available-p) (treesit-available-p))
-  ;; Remap ruby-mode to ruby-ts-mode
-  (add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode)))
+  ;; Ensure grammar is installed
+  (when (featurep 'tree-sitter-langs)
+    (tree-sitter-require 'ruby)))
 
 ;; Enhanced Rails support with projectile-rails
 (use-package! projectile-rails
@@ -468,3 +480,55 @@
   (map! :leader
         (:prefix ("x" . "AI")
          :desc "Copilot Chat" "c" #'copilot-chat-run)))
+
+;; Here are some additional functions/macros that could help you configure Doom:
+;;
+;; - `load!' for loading external *.el files relative to this one
+;; - `use-package!' for configuring packages
+;; - `after!' for running code after a package has loaded
+;; - `add-load-path!' for adding directories to the `load-path', relative to
+;;   this file. Emacs searches the `load-path' when you load packages with
+;;   `require' or `use-package'.
+;; - `map!' for binding new keys
+;;
+;; To get information about any of these functions/macros, move the cursor over
+;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+;; This will open documentation for it, including demos of how they are used.
+;;
+;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+;; they are implemented.
+
+;; Configure git-gutter directly
+;; (use-package! git-gutter
+;;   :config
+;;   ;; Enable git-gutter globally
+;;   (global-git-gutter-mode +1)
+
+;;   ;; Make sure it's enabled by default in text-mode and prog-mode
+;;   (add-hook! (prog-mode text-mode) #'git-gutter-mode)
+
+;;   ;; Update git-gutter when saving and switching windows
+;;   (add-hook 'after-save-hook #'git-gutter:update-all-windows)
+;;   (add-hook 'focus-in-hook #'git-gutter:update-all-windows)
+;;   (add-hook 'window-configuration-change-hook #'git-gutter:update-all-windows))
+
+;; ;; Configure git-gutter-fringe with custom bitmaps
+;; (use-package! git-gutter-fringe
+;;   :after git-gutter
+;;   :config
+;;   ;; Ensure proper fringe width
+;;   (fringe-mode '(8 . 8))
+
+;;   ;; Define custom fringe bitmaps for better visibility (VSCode style)
+;;   (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+;;   (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+;;   (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom)
+
+;;   ;; Set custom colors for the fringe indicators
+;;   (custom-set-faces!
+;;     '(git-gutter-fr:added ((t (:foreground "green"))))
+;;     '(git-gutter-fr:modified ((t (:foreground "yellow"))))
+;;     '(git-gutter-fr:deleted ((t (:foreground "red"))))))
+
+;; (add-hook! 'doom-first-input-hook
+;;   (global-git-gutter-mode +1))
