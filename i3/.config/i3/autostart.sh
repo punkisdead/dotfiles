@@ -12,7 +12,7 @@ feh --bg-fill ~/.config/backgrounds/wallhaven-j3ov5w_3440x1440.png &
 picom --animations -b &
 # numlockx on &
 dunst &
-# blueman-applet &
+blueman-applet &
 
 # sxhkd
 sxhkd -c ~/.config/i3/sxhkdrc &
