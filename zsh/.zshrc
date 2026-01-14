@@ -145,3 +145,7 @@ autoload -Uz compinit && compinit
 
 export KERL_CONFIGURE_OPTIONS="--enable-wx --with-wx-config=/usr/bin/wx-config"
 eval "$(~/.local/bin/mise activate zsh)"
+
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keyring/ssh
+export SSH_ASKPASS=/usr/lib/seahorse/ssh-askpass
+export SSH_ASKPASS_REQUIRE=prefer
